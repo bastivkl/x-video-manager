@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Video Tracker</title>
+  <style>
+    :root {
+      --twitter-blue: #1DA1F2;
+      --twitter-blue-light: #E8F5FD;
+      --twitter-dark: #14171A;
+      --twitter-gray-dark: #657786;
+      --twitter-gray: #AAB8C2;
+      --twitter-gray-light: #E1E8ED;
+      --twitter-gray-lighter: #F5F8FA;
+      --danger-color: #E0245E;
+      --danger-color-light: #F8E9EF;
+      --success-color: #17BF63;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 2px 6px rgba(0,0,0,0.12);
+      --border-radius-sm: 6px;
+      --border-radius-md: 8px;
+      --border-radius-lg: 12px;
+      --border-radius-full: 9999px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+      width: 390px;
+      max-height: 580px;
+      color: var(--twitter-dark);
+      background-color: #fff;
+    }
+    
+    .header {
+      background-color: #fff;
+      color: var(--twitter-dark);
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--twitter-gray-light);
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    #version {
+      font-size: 12px;
+      color: var(--twitter-gray-dark);
+      opacity: 0.7;
+    }
+    
+    .tab-container {
+      display: flex;
+      background-color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 14px 8px;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--twitter-gray-dark);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    
+    .tab:hover {
+      color: var(--twitter-blue);
+      background-color: var(--twitter-gray-lighter);
+    }
+    
+    .tab.active {
+      color: var(--twitter-blue);
+      border-bottom-color: var(--twitter-blue);
+      font-weight: 600;
+    }
+    
+    .content {
+      height: 460px;
+      overflow-y: auto;
+      padding: 12px;
+      background-color: var(--twitter-gray-lighter);
+    }
+
+    /* Custom scrollbar */
+    .content::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .content::-webkit-scrollbar-thumb {
+      background-color: var(--twitter-gray);
+      border-radius: var(--border-radius-full);
+    }
+    
+    .video-item {
+      background-color: #fff;
+      border-radius: var(--border-radius-md);
+      margin-bottom: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+    
+    .video-item:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    
+    .video-flex {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+    }
+    
+    .video-thumbnail {
+      width: 120px;
+      height: 68px;
+      border-radius: var(--border-radius-sm);
+      overflow: hidden;
+      flex-shrink: 0;
+      background-color: var(--twitter-gray-light);
+    }
+    
+    .video-thumbnail img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .video-thumbnail-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--twitter-gray-light);
+      color: var(--twitter-gray-dark);
+      font-size: 24px;
+    }
+    
+    .video-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .video-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      color: var(--twitter-dark);
+    }
+    
+    .video-meta {
+      color: var(--twitter-gray-dark);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    
+    .folder-badge {
+      display: inline-block;
+      background-color: var(--twitter-blue-light);
+      color: var(--twitter-blue);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: var(--border-radius-full);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    
+    .progress-bar {
+      height: 4px;
+      background-color: var(--twitter-gray-light);
+      border-radius: var(--border-radius-full);
+      overflow: hidden;
+      margin-top: auto;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background-color: var(--twitter-blue);
+    }
+    
+    .video-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background-color: #fff;
+      border-top: 1px solid var(--twitter-gray-lighter);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    button {
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--border-radius-full);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    button.primary {
+      background-color: var(--twitter-blue);
+      color: white;
+    }
+    
+    button.primary:hover {
+      background-color: #1a94da;
+    }
+    
+    button.secondary {
+      background-color: transparent;
+      color: var(--twitter-blue);
+      border: 1px solid var(--twitter-blue);
+    }
+    
+    button.secondary:hover {
+      background-color: var(--twitter-blue-light);
+    }
+    
+    button.danger {
+      background-color: transparent;
+      color: var(--danger-color);
+      border: 1px solid var(--danger-color);
+    }
+    
+    button.danger:hover {
+      background-color: var(--danger-color-light);
+    }
+    
+    button.icon-btn {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border-radius: 50%;
+    }
+    
+    .folder-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .folder-dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: white;
+      min-width: 160px;
+      box-shadow: var(--shadow-md);
+      z-index: 1;
+      border-radius: var(--border-radius-md);
+      padding: 5px 0;
+      border: 1px solid var(--twitter-gray-light);
+    }
+    
+    .folder-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background-color 0.2s;
+    }
+    
+    .folder-option:hover {
+      background-color: var(--twitter-blue-light);
+    }
+    
+    .show {
+      display: block;
+    }
+    
+    /* Forms */
+    .add-form {
+      margin-top: 20px;
+      background-color: #fff;
+      border-radius: var(--border-radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .add-form h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--twitter-dark);
+    }
+    
+    .form-group {
+      margin-bottom: 12px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--twitter-dark);
+    }
+    
+    input[type="text"], 
+    input[type="url"],
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--twitter-gray-light);
+      border-radius: var(--border-radius-sm);
+      box-sizing: border-box;
+      font-size: 14px;
+      color: var(--twitter-dark);
+      transition: border-color 0.2s;
+    }
+    
+    input[type="text"]:focus, 
+    input[type="url"]:focus,
+    select:focus {
+      border-color: var(--twitter-blue);
+      outline: none;
+      box-shadow: 0 0 0 2px var(--twitter-blue-light);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--twitter-gray-dark);
+      background-color: #fff;
+      border-radius: var(--border-radius-md);
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .empty-state p {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    /* Folder management */
+    .folder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .folder-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--twitter-dark);
+    }
+    
+    #add-folder-container {
+      background-color: #fff;
+      border-radius: var(--border-radius-md);
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .add-folder-form {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .add-folder-form input {
+      flex: 1;
+    }
+    
+    .folder-list {
+      background-color: #fff;
+      border-radius: var(--border-radius-md);
+      margin-bottom: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .folder-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--twitter-gray-lighter);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .folder-item:last-child {
+      border-bottom: none;
+    }
+    
+    .folder-item:hover {
+      background-color: var(--twitter-gray-lighter);
+    }
+    
+    .folder-item.active {
+      background-color: var(--twitter-blue-light);
+    }
+    
+    .folder-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .folder-count {
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      background-color: var(--twitter-blue);
+      padding: 2px 8px;
+      border-radius: var(--border-radius-full);
+    }
+    
+    #folder-videos-container {
+      background-color: #fff;
+      border-radius: var(--border-radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    #current-folder-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--twitter-dark);
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      backdrop-filter: blur(2px);
+      animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: var(--border-radius-lg);
+      width: 90%;
+      max-width: 330px;
+      box-shadow: var(--shadow-md);
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      0% { transform: translateY(20px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .modal-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--twitter-dark);
+    }
+    
+    .close {
+      color: var(--twitter-gray-dark);
+      font-size: 24px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+    
+    .close:hover {
+      color: var(--twitter-dark);
+    }
+    
+    #modal-folder-list {
+      margin-bottom: 0;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--twitter-gray-light);
+    }
+    
+    /* Success message */
+    .success-message {
+      color: var(--success-color);
+      margin-top: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .success-icon::before {
+      content: "✓";
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>X Video Tracker</h1>
+    <div id="version">v1.0.1</div>
+  </div>
+  
+  <div class="tab-container">
+    <div class="tab active" id="tab-watched">Watched</div>
+    <div class="tab" id="tab-saved">Saved</div>
+    <div class="tab" id="tab-folders">Folders</div>
+  </div>
+  
+  <div class="content">
+    <!-- Watched tab content -->
+    <div id="watched-content">
+      <div id="watched-videos-list"></div>
+      <div id="watched-empty-state" class="empty-state">
+        <p>No watched videos yet.</p>
+        <p>Videos you watch on X will appear here.</p>
+      </div>
+    </div>
+    
+    <!-- Saved tab content -->
+    <div id="saved-content" style="display: none;">
+      <div id="saved-videos-list"></div>
+      <div id="saved-empty-state" class="empty-state">
+        <p>No saved videos yet.</p>
+      </div>
+      
+      <div class="add-form">
+        <h3>Add Video</h3>
+        <form id="add-video-form">
+          <div class="form-group">
+            <label for="video-url">Video URL</label>
+            <input type="url" id="video-url" placeholder="https://x.com/username/status/1234567890" required>
+          </div>
+          <div class="form-group">
+            <label for="video-title">Title (optional)</label>
+            <input type="text" id="video-title" placeholder="Video title">
+          </div>
+          <div class="form-group">
+            <label for="video-thumbnail">Thumbnail URL (optional)</label>
+            <input type="url" id="video-thumbnail" placeholder="https://example.com/thumbnail.jpg">
+          </div>
+          <div class="form-group">
+            <label for="video-folder">Folder</label>
+            <select id="video-folder"></select>
+          </div>
+          <button type="submit" class="primary">Add Video</button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Folders tab content -->
+    <div id="folders-content" style="display: none;">
+      <div class="folder-header">
+        <h3>Manage Folders</h3>
+        <button id="add-folder-btn" class="secondary">Add Folder</button>
+      </div>
+      
+      <div id="add-folder-container" style="display: none;">
+        <form id="add-folder-form" class="add-folder-form">
+          <input type="text" id="folder-name" placeholder="New folder name" required>
+          <button type="submit" class="primary">Add</button>
+        </form>
+      </div>
+      
+      <div id="folder-list" class="folder-list"></div>
+      
+      <div id="folder-videos-container">
+        <h4 id="current-folder-name">Folder Contents</h4>
+        <div id="folder-videos-list"></div>
+        <div id="folder-empty-state" class="empty-state" style="display: none;">
+          <p>No videos in this folder.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Move to folder modal -->
+  <div id="folder-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Move to Folder</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div id="modal-folder-list" class="folder-list"></div>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 
