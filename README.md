@@ -1,4 +1,5 @@
 # X Video Tracker Chrome Extension
+![Screenshot 2025-03-31 at 18 14 53](https://github.com/user-attachments/assets/43e22aca-e250-491a-abbf-153ada95f65a)
 
 A Chrome extension that automatically tracks your progress on videos watched on Twitter/X, allowing you to resume playback where you left off.
 
@@ -31,7 +32,7 @@ A Chrome extension that automatically tracks your progress on videos watched on 
 5. **Verify Installation**:
    - The extension should now appear in your extensions list and be active.
    - You should see the extension icon in your Chrome toolbar.
-
+![Screenshot 2025-03-31 at 18 14 38](https://github.com/user-attachments/assets/a6cb5e59-4767-4b0e-a91a-f1c38a7037c7)
 ## Usage
 
 ### Watching Videos on X
